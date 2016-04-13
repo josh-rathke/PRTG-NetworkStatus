@@ -1,0 +1,64 @@
+h4 {
+    display: inline-block;
+    
+    [class^="flaticon-"]:before, 
+    [class*=" flaticon-"]:before, 
+    [class^="flaticon-"]:after, 
+    [class*=" flaticon-"]:after {
+        font-size: 28px;
+        margin-left: 0px;
+    }
+    
+    i {
+        margin-right: 16px;
+    }
+}
+
+.status-overview {
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 16px;
+    padding: 5px 10px;
+    position: relative;
+    top: -4px;
+    
+    @include breakpoint(medium down) {
+        display: block;
+        margin-left: 0px;
+        margin-bottom: 10px;
+        top: 0px;
+    }
+}
+
+.status-overview-success {
+    background-color: $success-color;
+    color: white;
+}
+
+.status-overview-warning {
+    color: $warning-color;
+    color: #444444;
+}
+
+.status-overview-alert {
+    color: $alert-color;
+    color: white;
+}
+
+.success-status {
+    background-color: $success-color !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+.alert-status {
+    background-color: $alert-color !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+
+/***** Residential Infrastructure *****/
+.odd_cell {
+    background: #F1F1F1;
+}
