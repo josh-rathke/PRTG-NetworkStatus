@@ -1,3 +1,66 @@
+/***** Dashboard View *****/
+.snapshot-container {
+    background: #F9F9F9;
+    
+    thead {
+        border: none !important;;
+
+        .snapshot-logo {
+            background: #DDDDDD;
+            text-align: center;
+        }
+
+        .snapshot-title {
+            background: #F1F1F1;
+            
+            h6 {
+                color: #444444;
+                font-weight: bold;
+                margin-bottom: 0px;
+                text-align: center;
+            }
+        }
+
+        .snapshot-overview {
+            color: white;
+            font-size: 14px;
+            text-align: center;
+        }
+    }
+    
+    tbody {
+        background: transparent;
+        border: none;
+    }
+    
+    .ic-snapshot-traffic {
+        border-radius: 99999px;
+        color: white;
+        margin: 20px auto;
+        padding: 24px 0px;
+        text-align: center;
+        height: 150px;
+        width: 150px;
+        
+        .ic-snapshot-traffic-title{
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .ic-snapshot-traffic-total {
+            font-size: 68px;
+            font-weight: bold;
+            line-height: .85em;
+        }
+        
+        .ic-snapshot-traffic-unit {
+            
+        }
+    }
+}
+
+
+/***** Standard Styles *****/
 h4 {
     display: inline-block;
     
@@ -15,6 +78,7 @@ h4 {
 }
 
 .status-overview {
+    color: white;
     font-size: 14px;
     font-weight: bold;
     margin-left: 16px;
@@ -30,35 +94,106 @@ h4 {
     }
 }
 
-.status-overview-success {
-    background-color: $success-color;
-    color: white;
-}
-
-.status-overview-warning {
-    color: $warning-color;
-    color: #444444;
-}
-
-.status-overview-alert {
-    color: $alert-color;
-    color: white;
-}
-
 .success-status {
     background-color: $success-color !important;
     color: white !important;
     font-weight: bold;
+    text-align: center;
+}
+
+.warning-status {
+    background-color: $warning-color !important;
+    color: white !important;
+    font-weight: bold;
+    text-align: center;
 }
 
 .alert-status {
     background-color: $alert-color !important;
     color: white !important;
     font-weight: bold;
+    text-align: center;
 }
 
+[class^="flaticon-"]:before, 
+[class*=" flaticon-"]:before, 
+[class^="flaticon-"]:after, 
+[class*=" flaticon-"]:after {
+    margin-left: 0px !important;
+}
 
-/***** Residential Infrastructure *****/
+/***** Table Styles *****/
+table {
+    font-size: 14px;
+    margin-bottom: 3rem !important;;
+}
+
+th {
+    
+    i {
+        font-weight: normal;
+    }
+}
+
+.status-title {
+    text-align: center;
+}
+
 .odd_cell {
     background: #F1F1F1;
+}
+
+/***** Tip Styles *****/
+.tip-link {
+    color: black;
+    border-bottom: 1px dashed #444;
+}
+
+.tip-container {
+    
+    h5 {
+        font-size: 14px;
+        font-weight: bold;
+        margin-bottom: 0px;
+        text-transform: uppercase;
+
+        i {
+            font-weight: normal;
+            margin-right: 10px;
+        }  
+    }
+    
+    p {
+        font-size: 14px;
+    }
+}
+
+/***** Sidebar Styles *****/
+.sidebar {
+    
+    .sticky-sidebar {
+        padding-right: 13px;
+        width: 100%;
+    }
+    
+    tr {
+        
+        td {
+            background: white;
+        }
+        
+        .icon-container {
+            background-color: #F1F1F1;
+            text-align: center;
+            width: 16%;
+        }
+        
+        i {
+            margin: 0px;
+        }
+        
+        .status-container {
+            width: 24%;
+        }
+    }
 }
