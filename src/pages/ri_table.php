@@ -1,61 +1,69 @@
-<?php
-// Define Status Overview Class
-$status_overview_class = status_overview(($num_ri_devices_up/$num_ri_devices)*100);
+<div id="ri" data-magellan-target="ri">
+    <h4><i class='flaticon-real-estate'></i>Residential Infrastructure</h4>
+    <span class='status-overview <?php echo status_overview($ri['percent_ri_devices_up']); ?>'>
+        <?php echo $ri['num_ri_devices_up'] . '/' . $ri['num_ri_devices'] . ' Devices Online'; ?>
+    </span>
 
-// Residential Infrastructure Table
-echo "<h4><i class='flaticon-technology-1'></i>Residential Infrastructure</h4>";
-echo "<span class='status-overview {$status_overview_class}'>{$num_ri_devices}/{$num_ri_devices_up} Devices Online</span>"; ?>
-
-<table data-magellan>
-    <thead>
-        <tr>
-            <th class="show-for-large">House</th>
-            <th>Device</th>
-            <th class="hide-for-small-only">Uptime</th>
-            <th class="hide-for-small-only">Downtime</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-
-        <?php
-        $residence_counter = 0; // Set Residence Counter
-        foreach ($residential_infrastructure->group as $key => $residence) {
-            $residence_class = $residence_counter % 2 == 0 ? 'even_cell' : 'odd_cell';
-            $device_counter = 0; // Reset Counter on each Residence
-
-            echo '<tr>';
-                echo "<td class='{$residence_class} show-for-large' rowspan='2'>" . $residence->name . '</td>';
-
-            foreach ($residence->device as $device) {
-                echo $device_counter == 0 ? '' : '</tr>';
-                    $device->name = tip_lookup($device->name);
-
-                    echo '<td>' . $device->name . '</td>';
-
-                    foreach ($device->sensor as $sensor) {
-                        if ($sensor->name == 'PING') {
-                            // Device Uptime
-                            $uptime = number_format((($sensor->cumulateduptime_raw)/60)/60);
-                            echo '<td class="hide-for-small-only">' . $uptime . ' Hours</td>';
-
-                            // Device Downtime
-                            $downtime = number_format((($sensor->cumulateddowntime_raw)/60));
-                            echo '<td class="hide-for-small-only">' . $downtime . ' Minutes</td>';
-
-                            // Device Status
-                            $sensor_status_class = $sensor->status == 'Up' ? 'success-status' : 'alert-status';
-                            echo "<td class='{$sensor_status_class}'>" . $sensor->status . '</td>';
-                        }
-                    }
-
+    <table>
+        <thead>
+            <tr>
+                <td>Sector Name</td>
+                <td>Traffic</td>
+                <td>Uptime</td>
+                <td width="15%">Status</td>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            foreach($ri['sectors'] as $sector) {
+                echo '<tr>';
+                    echo '<td>' . $sector['sector_name'] . '</td>';
+                    echo '<td>' . $sector['sector_traffic'] . '</td>';
+                    echo '<td>' . $sector['sector_uptime'] . '%</td>';
+                    echo '<td class="' . status_overview($sector['sector_status']) . '">' . $sector['sector_status'] . '</td>';
                 echo '</tr>';
-
-                $device_counter++;
             }
-            $residence_counter++;
-        }
-        ?>
 
-    </tbody>
-</table>
+            ?>
+        </tbody>
+    </table>
+    <table data-magellan>
+        <thead>
+            <tr>
+                <th class="show-for-large">House</th>
+                <th>Device</th>
+                <th class="hide-for-small-only">Uptime</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <?php
+            $residence_counter = 0; // Set Residence Counter
+            foreach ($ri['residences'] as $residence) {
+                $residence_class = $residence_counter % 2 == 0 ? 'even_cell' : 'odd_cell';
+                $device_counter = 0; // Reset Counter on each Residence
+
+                echo '<tr>';
+                    echo "<td class='{$residence_class} show-for-large' rowspan='2'>" . $residence['residence_name'] . '</td>';
+
+                foreach ($residence['devices'] as $device) {
+                    echo $device_counter == 0 ? '' : '</tr>';
+                        $device['device_name'] = tip_lookup($device['device_name']);
+
+                        echo '<td>' . $device['device_name'] . '</td>';  
+                        echo '<td class="hide-for-small-only">' . $device['device_uptime'] . '%</td>';
+                        echo "<td class='" . status_overview($device['device_status']) . "'>" . $device['device_status'] . '</td>';
+
+
+                    echo '</tr>';
+
+                    $device_counter++;
+                }
+                $residence_counter++;
+            }
+            ?>
+
+        </tbody>
+    </table>
+</div>

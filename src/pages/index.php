@@ -5,207 +5,23 @@
  * with PRTG and use information provided to display a
  * simple responsive view of the status of network devices.
  */
-$protocol = $_SERVER[ 'NETWORKSTATUS_PROTOCOL' ];
-$server = $_SERVER['NETWORKSTATUS_SERVER' ];
-$port = $_SERVER[ 'NETWORKSTATUS_SERVERPORT' ];
-$username = $_SERVER[ 'NETWORKSTATUS_USERNAME' ];
-$passhash = $_SERVER[ 'NETWORKSTATUS_PASSHASH' ];
+include('prtg_interface.php');
 
-// Define Socket and File Information
-$socket = "{$protocol}://{$server}:{$port}";
-$credentials = "username={$username}&passhash={$passhash}";
-$filename = "{$socket}/api/table.xml?content=sensortree&{$credentials}";
+// Build the Network Status object.
+$network_status = new NetworkStatus();
 
-$arrContextOptions = array(
-    "ssl" => array(
-        "verify_peer" => false,
-        "verify_peer_name" => false,
-    ),
-);
+// Filter out specific Object Properties for quicker access.
+$vs = $network_status->virtualization_services;
+$ic = $network_status->internet_connectivity;
+$nd = $network_status->network_distribution;
+$wc = $network_status->wireless_connectivity;
+$ri = $network_status->residential_infrastructure;
+$ts = $network_status->telephony_services;
+$ws = $network_status->web_services;
+$ss = $network_status->surveillance_services;
 
-if (($response_xml_data = file_get_contents("{$filename}", false, stream_context_create($arrContextOptions)))===false) {
-    echo "Error fetching XML\n";
-} else {
-   libxml_use_internal_errors(true);
-   $data = simplexml_load_string($response_xml_data);
-   if (!$data) {
-       echo "Error loading XML\n";
-       foreach(libxml_get_errors() as $error) {
-           echo "\t", $error->message;
-       }
-   }
-}
-
-// Trim the XML Document down to just the groups needed.
-$groups = $data->sensortree->nodes->group->probenode;
-
-// Assign Specific Groups to Variables for easier access.
-foreach ($groups->group as $group) {
-    $group->name == "Network Infrastructure" ? $network_infrastructure = $group : null;
-}
-
-// Assign Specific Sub Groups to Variables for further easier access.
-foreach($network_infrastructure->group as $group) { 
-    $group->name == "Residential Infrastructure" ? $residential_infrastructure = $group : null;
-    $group->name == "Wireless Access Points" ? $wireless_access_points = $group : null;
-    $group->name == "Switches" ? $switches = $group : null;
-    $group->name == "Wireless Backhaul Devices" ? $wb_devices = $group : null;
-}
-
-
-/**
- *  Gather Internet Statistics
- *  Here we will gather all of the WAN interfaces, and
- *  poll the traffic together to come up with an aggregate
- *  internet traffic value, along with generating basic uptime
- *  values.
- */
-$num_wan_connections = $num_wan_connections_down = $total_wan_traffic = 0;
-foreach ($network_infrastructure->device as $device) {
-    if ($device->name == "YWAMMT-COREROUTER") {
-        $core_router = $device;
-        foreach ($device->sensor as $sensor) {
-            if (strpos($sensor->name, 'WAN') !== false) {
-                // Fill up a WAN Connections Array
-                $wan_connections[] = $sensor;
-                $num_wan_connections++;
-                $sensor->status == 'Down' ? $num_wan_connections_down++ : null;
-                $total_wan_traffic = $total_wan_traffic + $sensor->lastvalue;
-            }
-            
-            if($sensor->name == "PING") {
-                $core_router_status = $sensor->status;
-            }
-        }
-    }
-}
-// Define the number of WAN Connections Up
-$num_wan_connections_up = $num_wan_connections - $num_wan_connections_down;
-// Define Percentage of WAN Connections Up
-$percent_wan_connections_up = ($num_wan_connections_up/$num_wan_connections)*100;
-
-
-/**
- *  Gather Statistics for Switches
- *  Here we will gather statistics and counts for the distribution
- *  switches on the network.
- */
-$num_switches = $num_switches_down = $num_dist_switches = $num_dist_switches_down = 0;
-foreach ($switches as $switch) {
-    $num_switches++;
-    foreach ($switch->sensor as $sensor) {
-        if ($sensor->name == 'PING') {
-            if($switch->name == "YWAMMT | SWCH | Core Switch") {
-                $core_switch_status = $sensor->status;
-                if ($sensor->status == "Down") {
-                    $num_switches_down++;
-                }
-                $core_switch_status = $sensor->status;
-            } else {
-                if ($sensor->status == "Down") {
-                    $num_switches_down++;
-                    $num_dist_switches_down++;
-                }
-            }
-        }
-    }
-}
-// Remove Core Switch from Distribution Switches.
-$num_dist_switches = $num_switches - 1;
-
-// Calculate Switches Up
-$num_switches_up = $num_switches - $num_switches_down;
-$num_dist_switches_up = $num_dist_switches - $num_dist_switches_down;
-
-// Calculate Switches Up Percentage
-$switches_up_percent = ($num_switches / $num_switches_up)*100;
-$dist_switches_up_percent = ($num_dist_switches / $num_dist_switches_up)*100;
-
-
-
-
-/**
- *  Count and Gather Access Point Statistics
- *  Here we will count and gather different statistics about our
- *  wireless access points around the campus.
- */
-$num_wireless_aps = $num_wireless_aps_down = 0;
-foreach ($wireless_access_points->device as $wireless_ap) {
-    $num_wireless_aps++;
-    foreach ($wireless_ap->sensor as $sensor) {
-        if ($sensor->name == 'PING' && $sensor->status == "Down") {
-            $num_wireless_aps_down++;
-        }
-    }
-}
-
-
-/**
- *  Wireless Backhaul Devices
- *  Here we will count all of the wireless backhaul devices
- *  used to wireless distribute the network over the beautful
- *  landscape that is Montana.
- */
-$num_wb_devices = $num_wb_devices_down = 0;
-foreach ($wb_devices->device as $device) {
-    $num_wb_devices++;
-}
-
-
-/**
- *  Count Residential Infrastructure Devices & Gather Statuses
- *  We use this section to gather statistics about how many devices
- *  currently reside in this group, along with interpreting data based
- *  the current status of specific sensors.
- */
-
-// Declare Variables
-$num_ri_devices = $num_ri_devices_down = 0;
-
-// Count Devices in Residential Infrastructure Group
-foreach ($residential_infrastructure->device as $device) {
-    $num_wb_devices++;
-    foreach($device->sensor as $sensor) {
-        if ($sensor->name == 'PING' && $sensor->status == 'Down') {
-            $num_wb_devices_down++;
-        }
-    }
-}
-
-// Count Devices in Each Individual Residence Group.
-foreach ($residential_infrastructure->group as $residence) {
-    foreach ($residence->device as $device) {
-        $num_ri_devices++;
-        foreach ($device->sensor as $sensor) {
-            if ($sensor->name == "PING") {
-                
-                if ($sensor->status == "Down") {
-                    $num_ri_devices_down++;
-                }
-                
-                if (strpos($device->name, 'STA') !== false) {
-                    $num_wb_devices++;
-                    if ($sensor->status == "Down"){
-                        $num_wb_devices_down++;
-                    }
-                }
-            }
-        }
-    }
-}
-// Declare Number of Residential Infrastructure Devics Up
-$num_ri_devices_up = $num_ri_devices - $num_ri_devices_down;
-
-/**
- *  Finalize Count of Wireless Backhaul Devices
- *  Here we will sum up all of the wireless backhaul
- *  device statistics we have.
- */
-$num_wb_devices_up = $num_wb_devices - $num_wb_devices_down;
-$percent_wb_devices_up = ($num_wb_devices_up/$num_wb_devices)*100;
-
-
-
+print_r($ss);
+        
 /**
  *  Define Status Overview Class
  *  This class determines what color the status overview
@@ -214,7 +30,7 @@ $percent_wb_devices_up = ($num_wb_devices_up/$num_wb_devices)*100;
 function status_overview($status) {
     if ($status == 100 || $status == 'Up') {
         return 'success-status';
-    } elseif ($status > 90 && $status < 100) {
+    } elseif ($status > 90 && $status < 100 || $status == 'Warning') {
         return 'warning-status';
     } else {
         return 'alert-status';
@@ -228,87 +44,65 @@ function tip_lookup($string) {
     return $string;
 }
 
+function sanitize_traffic_kbit($raw_traffic) {
+    return intval(str_replace(',', '', str_replace( ' kbit/s', '', $raw_traffic)));
+}
+
 ?>
+
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<meta http-equiv="refresh" content="20" />-->
+    <title>YWAM Montana | Lakeside Network Status</title>
+    <link rel="stylesheet" href="{{root}}assets/css/app.css">
+    <link rel="stylesheet" type="text/css" href="{{root}}assets/font/flaticon.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.0.0/Chart.js"></script>
+  </head>
+  <body>
 
 <div class="row">
     <div class="large-4 medium-6 columns">
-        
-        <?php include('ic_snapshot.php'); ?>
-        
+        <?php include('ic_snapshot.php'); // Internet Connectivity Snapshot ?>
+        <?php include('ws_snapshot.php'); // Web Services Snapshot ?>
     </div>
     
     <div class="large-4 medium-6 columns">
-        
-        <?php // Count total number of network distribution devices.
-        
-        $num_nd_devices = $num_nd_devices_down = $num_nd_devices_up = 0;
-        // Give static number for Core Devices
-        $core_nd_devices = 2 + $num_dist_switches + $num_wb_devices;
-        $core_nd_devices_down = 0 + $num_dist_switches_down + $num_wb_devices_down;
-        
-        $core_router_status == "Down" ? $core_nd_devices_down++ : null;
-        $core_switch_status == "Down" ? $core_nd_devices_down++ : null;
-        
-        $core_nd_devices_up = $core_nd_devices - $core_nd_devices_down;
-        $percent_core_nd_devices_up = ($core_nd_devices_up/$core_nd_devices_up)*100;
-        ?>
-        
-        <table class="snapshot-container">
-            <thead>
-                <tr class="snapshot-title">
-                    <th class="snapshot-logo"><i class='flaticon-connection-1'></i></th>
-                    <th><h6>Network Distribution</h6></th>
-                    <th class="snapshot-overview <?php echo status_overview($percent_core_nd_devices_up); ?>"><div><?php echo $core_nd_devices_up . '/' . $core_nd_devices; ?></div></th>
-                </tr>
-            </thead>
-            <tbody>
-                
-                <tr>
-                    <td colspan="2">Core Router</td>
-                    <td class="<?php echo status_overview($core_router_status); ?>"><?php echo $core_router_status; ?></td>
-                </tr>
-                <tr>
-                    <td colspan="2">Core Switch</td>
-                    <td class="<?php echo status_overview($core_switch_status); ?>"><?php echo $core_switch_status; ?></td>
-                </tr>
-                <tr>
-                    <td colspan="2">Distribution Switches</td>
-                    <td class="snapshot-status <?php echo status_overview($dist_switches_up_percent); ?>"><?php echo $num_dist_switches . '/' . $num_dist_switches_up; ?></td>
-                </tr>
-                <tr>
-                    <td colspan="2">Wireless Backhaul Devices</td>
-                    <td class="snapshot-status <?php echo status_overview($percent_wb_devices_up); ?>"><?php echo $num_wb_devices . '/' . $num_wb_devices_up; ?></td>
-                </tr>
-            </tbody>
-        </table>
+        <?php include('iu_snapshot.php'); // Internet Usage Snapshot ?>
+        <?php include('nd_snapshot.php'); // Network Distribution Snapshot ?>
+        <?php include('ts_snapshot.php'); // Telephony Services Snapshot ?>
     </div>
     
     <div class="large-4 medium-6 columns">
-        
+        <?php include('wc_snapshot.php'); // Wireless Connectivity Snapshot ?>
+        <?php include('ss_snapshot.php'); // Surveillance Services Snapshot ?>
+        <?php include('vs_snapshot.php'); // Virtualization Services Snapshot ?>
     </div>
 </div>
 
 <div class="row">
-    
-    
+    <div class="medium-12 columns">
+        <div class="device-drilldown">
+            <h2 class="device-drilldown-title">Devices & Services Drilldown</h2>
+        </div>
+    </div>
+</div>
+
+
+<div class="row">
     <div id="tablesContainer" class="large-8 columns">    
-        
-        
-        
-        
+
     <?php
-        
-        
-        
-        
-        
-        
-        
-    // Internet Connectivity
-    include('ic_table.php');
-        
-    // Residential Infrastructure Table
-    include('ri_table.php'); ?>
+    include('ic_table.php'); // Internet Connectivity Table
+    include('ws_table.php'); // Web Services Table
+    include('vs_table.php'); // Virtual Services Table
+    include('ts_table.php'); // Telephony Services Table
+    include('ri_table.php'); // Residential Infrastructure Table
+    include('ss_table.php'); // Surveillance Services Table
+    ?>
         
         
         <div class="tip-container">
@@ -334,21 +128,49 @@ function tip_lookup($string) {
     
     <div class="large-4 columns sidebar" data-sticky-container>
         <div class="sticky sticky-sidebar" data-sticky data-anchor="tablesContainer">
-            <table class="medium-12 columns">
+            <table class="medium-12 columns" data-magellan>
                 <tr>
-                    <td class="icon-container"><i class='flaticon-technology-3'></i></td>
-                    <td>Internet Connectivity</td>
+                    <td class="icon-container"><i class='flaticon-technology-4'></i></td>
+                    <td><a href="#ic">Internet Connectivity</a></td>
                     <td class="success-status status-container">999/999</td>
                 </tr>
                 <tr>
-                    <td class="icon-container"><i class='flaticon-technology-1'></i></td>
-                    <td>Residential Infrastructure</td>
+                    <td class="icon-container"><i class='flaticon-earth-globe'></i></td>
+                    <td><a href="#ws">Web Services</a></td>
+                    <td class="status-container <?php echo status_overview($ws['percent_web_services_up']) ?>">
+                        <?php echo $ws['num_web_services_up'] . '/' . $ws['num_web_services']; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="icon-container"><i class='flaticon-technology-5'></i></td>
+                    <td><a href="#vs">Virtualization Services</a></td>
+                    <td class="status-container <?php echo status_overview($vs['percent_vs_devices_up']) ?>">
+                        <?php echo $vs['num_vs_devices_up'] . '/' . $vs['num_vs_devices']; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="icon-container"><i class='flaticon-technology-2'></i></td>
+                    <td><a href="#ts">Telephony Services</a></td>
+                    <td class="status-container <?php echo status_overview($ts['percent_ts_devices_up']) ?>">
+                        <?php echo $ts['num_ts_devices_up'] . '/' . $ts['num_ts_devices']; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="icon-container"><i class='flaticon-real-estate'></i></td>
+                    <td><a href="#ri">Residential Infrastructure</a></td>
                     <td class="success-status status-container">999/999</td>
+                </tr>
+                <tr>
+                    <td class="icon-container"><i class='flaticon-video'></i></td>
+                    <td><a href="#ss">Surveillance Services</a></td>
+                    <td class="status-container <?php echo status_overview($ss['percent_ss_devices_up']) ?>">
+                        <?php echo $ss['num_ss_devices_up'] . '/' . $ss['num_ss_devices']; ?>
+                    </td>
                 </tr>
             </table>
         </div>
     </div>
-    
-    
-
 </div>
+      <script src="{{root}}assets/js/app.js"></script>
+  </body>
+</html>

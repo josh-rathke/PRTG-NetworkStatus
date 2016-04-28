@@ -130,6 +130,7 @@ function watch() {
   gulp.watch('src/{layouts,partials}/**/*.html', gulp.series(resetPages, pages, browser.reload));
   gulp.watch('src/pages/**/*.php', gulp.series(pages, browser.reload));
   gulp.watch('src/{layouts,partials}/**/*.php', gulp.series(resetPages, pages, browser.reload));
+  gulp.watch('src/library/*.php', gulp.series(resetPages, pages, browser.reload));
   gulp.watch('src/assets/scss/**/*.scss', sass);
   gulp.watch('src/assets/js/**/*.js', gulp.series(javascript, browser.reload));
   gulp.watch('src/assets/img/**/*', gulp.series(images, browser.reload));

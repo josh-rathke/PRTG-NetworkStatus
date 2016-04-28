@@ -1,6 +1,6 @@
 	/*
   	Flaticon icon font: Flaticon
-  	Creation date: 15/04/2016 21:48
+  	Creation date: 29/04/2016 00:39
   	*/
 
 @font-face {
@@ -29,13 +29,19 @@ font-style: normal;
 margin-left: 20px;
 }
 
-.flaticon-buildings:before { content: "\f100"; }
-.flaticon-connection:before { content: "\f101"; }
-.flaticon-connection-1:before { content: "\f102"; }
-.flaticon-paper:before { content: "\f103"; }
-.flaticon-technology:before { content: "\f104"; }
-.flaticon-technology-1:before { content: "\f105"; }
-.flaticon-technology-2:before { content: "\f106"; }
-.flaticon-technology-3:before { content: "\f107"; }
-.flaticon-technology-4:before { content: "\f108"; }
-.flaticon-video:before { content: "\f109"; }
+.flaticon-check:before { content: "\f100"; }
+.flaticon-checkmark-outlined-circular-button:before { content: "\f101"; }
+.flaticon-connection:before { content: "\f102"; }
+.flaticon-connection-1:before { content: "\f103"; }
+.flaticon-earth-globe:before { content: "\f104"; }
+.flaticon-graphic:before { content: "\f105"; }
+.flaticon-houses:before { content: "\f106"; }
+.flaticon-paper:before { content: "\f107"; }
+.flaticon-real-estate:before { content: "\f108"; }
+.flaticon-technology:before { content: "\f109"; }
+.flaticon-technology-1:before { content: "\f10a"; }
+.flaticon-technology-2:before { content: "\f10b"; }
+.flaticon-technology-3:before { content: "\f10c"; }
+.flaticon-technology-4:before { content: "\f10d"; }
+.flaticon-technology-5:before { content: "\f10e"; }
+.flaticon-video:before { content: "\f10f"; }

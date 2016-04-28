@@ -1,6 +1,6 @@
     /*
     Flaticon icon font: Flaticon
-    Creation date: 15/04/2016 21:48
+    Creation date: 29/04/2016 00:39
     */
 
     @font-face {
@@ -36,24 +36,36 @@
   font-smoothing: antialiased;
     }
 
-    .flaticon-buildings:before { content: "\f100"; }
-.flaticon-connection:before { content: "\f101"; }
-.flaticon-connection-1:before { content: "\f102"; }
-.flaticon-paper:before { content: "\f103"; }
-.flaticon-technology:before { content: "\f104"; }
-.flaticon-technology-1:before { content: "\f105"; }
-.flaticon-technology-2:before { content: "\f106"; }
-.flaticon-technology-3:before { content: "\f107"; }
-.flaticon-technology-4:before { content: "\f108"; }
-.flaticon-video:before { content: "\f109"; }
+    .flaticon-check:before { content: "\f100"; }
+.flaticon-checkmark-outlined-circular-button:before { content: "\f101"; }
+.flaticon-connection:before { content: "\f102"; }
+.flaticon-connection-1:before { content: "\f103"; }
+.flaticon-earth-globe:before { content: "\f104"; }
+.flaticon-graphic:before { content: "\f105"; }
+.flaticon-houses:before { content: "\f106"; }
+.flaticon-paper:before { content: "\f107"; }
+.flaticon-real-estate:before { content: "\f108"; }
+.flaticon-technology:before { content: "\f109"; }
+.flaticon-technology-1:before { content: "\f10a"; }
+.flaticon-technology-2:before { content: "\f10b"; }
+.flaticon-technology-3:before { content: "\f10c"; }
+.flaticon-technology-4:before { content: "\f10d"; }
+.flaticon-technology-5:before { content: "\f10e"; }
+.flaticon-video:before { content: "\f10f"; }
     
-    $font-Flaticon-buildings: "\f100";
-    $font-Flaticon-connection: "\f101";
-    $font-Flaticon-connection-1: "\f102";
-    $font-Flaticon-paper: "\f103";
-    $font-Flaticon-technology: "\f104";
-    $font-Flaticon-technology-1: "\f105";
-    $font-Flaticon-technology-2: "\f106";
-    $font-Flaticon-technology-3: "\f107";
-    $font-Flaticon-technology-4: "\f108";
-    $font-Flaticon-video: "\f109";
+    $font-Flaticon-check: "\f100";
+    $font-Flaticon-checkmark-outlined-circular-button: "\f101";
+    $font-Flaticon-connection: "\f102";
+    $font-Flaticon-connection-1: "\f103";
+    $font-Flaticon-earth-globe: "\f104";
+    $font-Flaticon-graphic: "\f105";
+    $font-Flaticon-houses: "\f106";
+    $font-Flaticon-paper: "\f107";
+    $font-Flaticon-real-estate: "\f108";
+    $font-Flaticon-technology: "\f109";
+    $font-Flaticon-technology-1: "\f10a";
+    $font-Flaticon-technology-2: "\f10b";
+    $font-Flaticon-technology-3: "\f10c";
+    $font-Flaticon-technology-4: "\f10d";
+    $font-Flaticon-technology-5: "\f10e";
+    $font-Flaticon-video: "\f10f";
