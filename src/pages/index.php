@@ -19,8 +19,9 @@ $ri = $network_status->residential_infrastructure;
 $ts = $network_status->telephony_services;
 $ws = $network_status->web_services;
 $ss = $network_status->surveillance_services;
+$ns = $network_status->network_services;
 
-print_r($ss);
+print_r($ns);
         
 /**
  *  Define Status Overview Class
@@ -98,7 +99,10 @@ function sanitize_traffic_kbit($raw_traffic) {
     <?php
     include('ic_table.php'); // Internet Connectivity Table
     include('ws_table.php'); // Web Services Table
+    include('nd_table.php'); // Network Distribution
+    include('wc_table.php'); // Wireless Connectivity
     include('vs_table.php'); // Virtual Services Table
+    include('ns_table.php'); // Network Services Table
     include('ts_table.php'); // Telephony Services Table
     include('ri_table.php'); // Residential Infrastructure Table
     include('ss_table.php'); // Surveillance Services Table
@@ -142,10 +146,31 @@ function sanitize_traffic_kbit($raw_traffic) {
                     </td>
                 </tr>
                 <tr>
+                    <td class="icon-container"><i class='flaticon-connection-1'></i></td>
+                    <td><a href="#nd">Network Distribution</a></td>
+                    <td class="status-container <?php echo status_overview($percent_nd_devices_up) ?>">
+                        <?php echo $num_nd_devices_up . '/' . $num_nd_devices; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="icon-container"><i class='flaticon-technology-3'></i></td>
+                    <td><a href="#nd">Wireless Connectivity</a></td>
+                    <td class="status-container <?php echo status_overview($wc['percent_campus_aps_up']) ?>">
+                        <?php echo $wc['num_campus_aps_up'] . '/' . $wc['num_campus_aps']; ?>
+                    </td>
+                </tr>
+                <tr>
                     <td class="icon-container"><i class='flaticon-technology-5'></i></td>
                     <td><a href="#vs">Virtualization Services</a></td>
                     <td class="status-container <?php echo status_overview($vs['percent_vs_devices_up']) ?>">
                         <?php echo $vs['num_vs_devices_up'] . '/' . $vs['num_vs_devices']; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="icon-container"><i class='flaticon-technology-3'></i></td>
+                    <td><a href="#ns">Network Services</a></td>
+                    <td class="status-container <?php echo status_overview($wc['percent_campus_aps_up']) ?>">
+                        <?php echo $wc['num_campus_aps_up'] . '/' . $wc['num_campus_aps']; ?>
                     </td>
                 </tr>
                 <tr>

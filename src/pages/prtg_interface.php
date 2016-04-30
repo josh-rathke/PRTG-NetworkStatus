@@ -3,7 +3,6 @@
 class NetworkStatus {
     
     var $retrieved_xml;
-    var $network_status;
     var $virtualization_services;
     var $internet_connectivity;
     var $network_distribution;
@@ -12,6 +11,7 @@ class NetworkStatus {
     var $telephony_services;
     var $web_services;
     var $surveillance_services;
+    var $network_services;
     
     /**
      *  Open A Connection to the PRTG Server
@@ -389,6 +389,12 @@ class NetworkStatus {
                             $this->network_distribution['num_dist_swtiches_down']++;
                         }
                     }
+                    
+                    $this->network_distribution['switches'][] = array (
+                        'switch_name'    => (string) $switch->name,
+                        'switch_latency' => (string) $sensor->lastvalue,
+                        'switch_status'  => (string) $sensor->status,
+                    );
                 }
             }
         }
@@ -407,6 +413,12 @@ class NetworkStatus {
         $this->network_distribution['percent_dist_switches_up'] = 
             ($this->network_distribution['num_dist_switches'] / $this->network_distribution['num_dist_switches_up'])*100;
     
+        // Sort Switches By Name
+        function sort_by_switch_name ( $a, $b ) {
+            return strcmp($a['switch_name'], $b['switch_name']);
+        }
+        
+        usort($this->network_distribution['switches'], 'sort_by_switch_name');
         
         /**
          *  Wireless Backhaul Devices
@@ -419,6 +431,8 @@ class NetworkStatus {
         
         $this->network_distribution['num_wb_devices'] = 0;
         $this->network_distribution['num_wb_devices_down'] = 0;
+        $this->network_distribution['num_ri_wb_devices'] = 0;
+        $this->network_distribution['num_ri_wb_devices_down'] = 0;
         
         foreach ($wb_devices->device as $device) {
             $this->network_distribution['num_wb_devices']++;
@@ -427,6 +441,7 @@ class NetworkStatus {
                 if ($sensor->name == "PING") {
                     $this->network_distribution['wb_devices'][] = array(
                         'device_name'   => (string) $device->name,
+                        'device_latency'=>(string) $sensor->lastvalue,
                         'device_status' => (string) $sensor->status,
                     );
                     
@@ -445,10 +460,12 @@ class NetworkStatus {
         foreach($ri_devices->device as $device) {
             if (strpos($device->name, 'SCTR') !== false) {
                 $this->network_distribution['num_wb_devices']++;
+                $this->network_distribution['num_ri_wb_devices']++;
                 
                 foreach ($device->sensor as $sensor) {
                     if ($sensor->name == 'PING' && $sensor->status == 'Down') {
                         $this->network_distribution['num_wb_devices_down']++;
+                        $this->network_distribution['num_ri_wb_devices_down']++;
                     }
                 }
             }
@@ -459,10 +476,12 @@ class NetworkStatus {
             foreach ($group->device as $device) {
                 if (strpos($device->name, 'YWAMMT | STA') !== false) {
                     $this->network_distribution['num_wb_devices']++;
+                    $this->network_distribution['num_ri_wb_devices']++;
                     
                     foreach ($device->sensor as $sensor) {
                         if ($sensor->name == 'PING' && $sensor->status == 'Down') {
-                            $this->network_distribution['num_wb_devices_down'];
+                            $this->network_distribution['num_wb_devices_down']++;
+                            $this->network_distribution['num_ri_wb_devices_down']++;
                         }
                     }
                 }
@@ -474,6 +493,17 @@ class NetworkStatus {
             $this->network_distribution['num_wb_devices'] - $this->network_distribution['num_wb_devices_down'];
         $this->network_distribution['percent_wb_devices_up'] =
             ($this->network_distribution['num_wb_devices_up'] / $this->network_distribution['num_wb_devices'])*100;
+        $this->network_distribution['num_ri_wb_devices_up'] =
+            $this->network_distribution['num_ri_wb_devices'] - $this->network_distribution['num_ri_wb_devices_down'];
+        $this->network_distribution['percent_ri_wb_devices_up'] =
+            ($this->network_distribution['num_ri_wb_devices_up'] / $this->network_distribution['num_ri_wb_devices'])*100;
+        
+        // Sort Wireless Backhauls By Name
+        function sort_by_wb_name ( $a, $b ) {
+            return strcmp($a['device_name'], $b['device_name']);
+        }
+
+        usort($this->network_distribution['wb_devices'], 'sort_by_wb_name');
         
         /**
          *  Calculate Network Distribution Totals
@@ -522,6 +552,7 @@ class NetworkStatus {
         $this->wireless_connectivity['mbi_gen_traffic'] = 0;
         $this->wireless_connectivity['mbi_staff_traffic'] = 0;
 
+        $ap_index = 0;
         foreach ($wireless_access_points->device as $wireless_ap) {
 
             // Count statistics for YWAM Montana APs
@@ -531,9 +562,19 @@ class NetworkStatus {
 
                 // Loop through each AP and check the sensors
                 foreach ($wireless_ap->sensor as $sensor) {
-                    if ($sensor->name == 'PING' && $sensor->status == "Down") {
-                        $this->wireless_connectivity['num_wireless_aps_down']++;
-                        $this->wireless_connectivity['num_ywam_aps_down']++;
+                    
+                    if (strpos($sensor->name, 'Aggregate Traffic') !== false) {
+                        $this->wireless_connectivity['campus_wireless_aps'][$ap_index]['ap_traffic'] = (string) $sensor->lastvalue;
+                    }
+                    
+                    if ($sensor->name == 'PING') {
+                        $this->wireless_connectivity['campus_wireless_aps'][$ap_index]['ap_name'] = (string) $wireless_ap->name;
+                        $this->wireless_connectivity['campus_wireless_aps'][$ap_index]['ap_status'] = (string) $sensor->status;
+                        
+                        if ($sensor->status == "Down") {
+                            $this->wireless_connectivity['num_wireless_aps_down']++;
+                            $this->wireless_connectivity['num_ywam_aps_down']++;
+                        }
                     }
 
                     if (strpos($sensor->name, 'YWAMMT-General Traffic') !== false) {
@@ -557,9 +598,19 @@ class NetworkStatus {
 
                 // Loop through each sensor and check the status
                 foreach ($wireless_ap->sensor as $sensor) {
-                    if ($sensor->name == 'PING' && $sensor->status == 'Down') {
-                        $this->wireless_connectivity['num_wireless_aps_down']++;
-                        $this->wireless_connectivity['num_mbi_aps_down']++;
+                    
+                    if (strpos($sensor->name, 'Aggregate Traffic') !== false) {
+                        $this->wireless_connectivity['campus_wireless_aps'][$ap_index]['ap_traffic'] = (string) $sensor->lastvalue;
+                    }
+                    
+                    if ($sensor->name == 'PING') {
+                        $this->wireless_connectivity['campus_wireless_aps'][$ap_index]['ap_name'] = (string) $wireless_ap->name;
+                        $this->wireless_connectivity['campus_wireless_aps'][$ap_index]['ap_status'] = (string) $sensor->status;
+                        
+                        if ($sensor->status == 'Down') {
+                            $this->wireless_connectivity['num_wireless_aps_down']++;
+                            $this->wireless_connectivity['num_mbi_aps_down']++;
+                        }
                     }
 
                     if (strpos($sensor->name, 'MBI-CoreServices Traffic') !== false) {
@@ -571,6 +622,7 @@ class NetworkStatus {
                     }
                 }
             }
+            $ap_index++;
         }
 
         // Get statistics on YWAM | General being broadcast in residential structures.
@@ -646,6 +698,19 @@ class NetworkStatus {
             $this->wireless_connectivity['num_mbi_aps'] - $this->wireless_connectivity['num_mbi_aps_down'];
         $this->wireless_connectivity['percent_mbi_aps_up'] = 
             ($this->wireless_connectivity['num_mbi_aps_up'] / $this->wireless_connectivity['num_mbi_aps'])*100;
+        
+        //Calculate Campus AP Statistics Wireless APs - Residential
+        $this->wireless_connectivity['num_campus_aps'] = $this->wireless_connectivity['num_wireless_aps'] - $this->wireless_connectivity['num_ri_aps'];
+        $this->wireless_connectivity['num_campus_aps_up'] = $this->wireless_connectivity['num_wireless_aps_up'] - $this->wireless_connectivity['num_ri_aps_up'];
+        $this->wireless_connectivity['percent_campus_aps_up'] = ($this->wireless_connectivity['num_campus_aps_up'] / $this->wireless_connectivity['num_campus_aps'])*100;
+   
+    // Sort Access Points By Name
+    function sort_by_ap_name ( $a, $b ) {
+        return strcmp($a['ap_name'], $b['ap_name']);
+    }
+
+    usort($this->wireless_connectivity['campus_wireless_aps'], 'sort_by_ap_name');
+    
     }
     
     /**
@@ -825,7 +890,6 @@ class NetworkStatus {
     
     public function web_services() {
         $web_services = $this->filter_object('Web Services');
-        //print_r($web_services);
         
         $this->web_services['num_web_services'] = 0;
         $this->web_services['num_web_services_down'] = 0;
@@ -907,6 +971,45 @@ class NetworkStatus {
     }
     
     /**
+     *  Gather Statistics about Network Services
+     *  These will include things like printers, fax machines,
+     *  and file servers.
+     */
+    public function network_services() {
+        $file_servers = $this->filter_object('File Servers');
+        
+        $fs_index = 0;
+        foreach($file_servers->device as $device) {
+            
+            $this->network_services['fileservers'][$fs_index]['server_name'] = (string) $device->name;
+            
+            // Zero Out SNMP Traffic Sensor
+            $this->network_services['fileservers'][$fs_index]['server_traffic'] = 0;
+            
+            foreach ($device->sensor as $sensor) {
+                
+                if (strpos($sensor->sensortype, 'SNMP Synology System Health') !== false) {
+                    $this->network_services['fileservers'][$fs_index]['server_status'] = (string) $sensor->status;
+                    $this->network_services['fileservers'][$fs_index]['server_temp'] = (string) $sensor->lastvalue;
+                }
+                
+                if (strpos($sensor->sensortype, 'SNMP Traffic') !== false) {
+                    $this->network_services['fileservers'][$fs_index]['server_traffic'] += 
+                        intval(str_replace(',', '', (str_replace('kbit/s', '', $sensor->lastvalue))));
+                }
+                
+                if (strpos($sensor->sensortype, 'SNMP Synology Physical Disk') !== false) {
+                    $this->network_services['fileservers'][$fs_index]['disks'][] = (string) $sensor->status;
+                }
+                
+                
+            }
+            
+            $fs_index++;
+        }
+    }
+    
+    /**
      *  Construct the Network Status Object
      *  This is the constructor function of the Network Status
      *  class and will build the object needed to retrieve data.
@@ -922,6 +1025,7 @@ class NetworkStatus {
         $this->telephony_services();         // Build Telephony Services Dataset
         $this->web_services();               // Build Web Services Dataset
         $this->surveillance_services();      // Build Surveillance Services Dataset
+        $this->network_services();           // Build Network Services Dataset
         
         // Dump the retrieved XML data.
         unset($this->retrieved_xml);

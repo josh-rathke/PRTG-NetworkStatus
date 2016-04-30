@@ -1,7 +1,7 @@
 <div id="ts" data-magellan-target="ts">
     <h4><i class='flaticon-technology-2'></i>Telephony Services</h4>
     <span class='status-overview <?php echo status_overview($ts['percent_ts_devices_up']); ?>'>
-        <?php echo $ts['num_ts_devices'] . '/' . $ts['num_ts_devices_up'] . ' Devices Online'; ?>
+        <?php echo $ts['num_ts_devices_up'] . '/' . $ts['num_ts_devices'] . ' Devices Online'; ?>
     </span>
     
     <table>
